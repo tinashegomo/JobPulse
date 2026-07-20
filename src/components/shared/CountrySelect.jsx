@@ -68,7 +68,7 @@ export default function CountrySelect({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`w-full flex items-center justify-between gap-8 rounded-input border bg-surface-elevated px-12 py-10 text-body-normal text-left outline-none transition-all duration-200 ${
+        className={`w-full flex items-center justify-between gap-8 rounded-input border bg-surface-elevated px-12 py-8 text-body-normal text-left outline-none transition-all duration-200 ${
           value
             ? 'text-text-primary border-border-default focus:border-border-focus focus-ring'
             : 'text-text-muted border-border-default focus:border-border-focus focus-ring'

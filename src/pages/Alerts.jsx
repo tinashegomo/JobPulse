@@ -8,7 +8,7 @@ import { Bell } from 'lucide-react';
 
 const Alerts = () => {
   const { alerts, loading, error, addAlert, editAlert, removeAlert } = useAlerts();
-  const { keywords, save: saveKeyword, remove: deleteKeyword } = useKeywords();
+  const { keywords, save: saveKeyword } = useKeywords();
 
   const handleToggle = (alertId, enabled) => {
     editAlert(alertId, { enabled });
@@ -28,7 +28,6 @@ const Alerts = () => {
           alertCount={alerts.length}
           keywords={keywords}
           onSaveKeyword={saveKeyword}
-          onDeleteKeyword={deleteKeyword}
         />
       </div>
 
