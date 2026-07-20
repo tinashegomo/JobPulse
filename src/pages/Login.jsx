@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Loader2, Briefcase } from 'lucide-react';
+import Button from '../components/shared/Button';
+import Input from '../components/shared/Input';
 
 const FIREBASE_ERRORS = {
   'auth/invalid-credential': 'Invalid email or password.',
@@ -33,15 +35,10 @@ export default function Login() {
     }
   };
 
-  const inputBase =
-    'w-full rounded-input border bg-surface-elevated px-16 py-12 text-body-normal text-text-primary placeholder:text-text-muted outline-none transition-all duration-200';
-  const inputOk =
-    'border-border-default focus:border-border-focus focus-ring';
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-subtle px-16 py-24 animate-fade-in">
       <div className="w-full max-w-[420px]">
-        <div className="rounded-card bg-surface-default p-32 shadow-elevation-3 animate-slide-up">
+        <div className="rounded-card bg-surface-default p-28 shadow-elevation-3 animate-slide-up">
           <div className="mb-24 text-center">
             <div className="mx-auto mb-16 flex h-14 w-14 items-center justify-center rounded-input bg-brand-primary text-neutral-0 shadow-elevation-2">
               <Briefcase className="w-7 h-7" />
@@ -55,46 +52,38 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="mb-20 rounded-input border border-danger-main bg-danger-bg px-16 py-12 text-body-small text-danger-main animate-fade-in">
+            <div className="mb-18 rounded-input border border-danger-main bg-danger-bg px-14 py-10 text-body-small text-danger-main animate-fade-in">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-20">
-            <div>
-              <label className="mb-8 block text-ui-label font-semibold text-text-secondary">
-                Email
-              </label>
-              <input
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`${inputBase} ${inputOk}`}
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-18">
+            <Input
+              label="Email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-            <div>
-              <label className="mb-8 block text-ui-label font-semibold text-text-secondary">
-                Password
-              </label>
-              <input
-                type="password"
-                autoComplete="current-password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`${inputBase} ${inputOk}`}
-                required
-              />
-            </div>
+            <Input
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
 
-            <button
+            <Button
               type="submit"
+              variant="primary"
+              size="lg"
+              className="w-full"
               disabled={submitting}
-              className="flex w-full items-center justify-center gap-8 rounded-input bg-brand-primary px-16 py-8 text-sm font-semibold text-neutral-0 shadow-elevation-1 hover:bg-brand-hover hover:shadow-elevation-2 active:bg-brand-pressed disabled:cursor-not-allowed disabled:opacity-60 press-scale transition-all duration-200"
             >
               {submitting ? (
                 <>
@@ -104,11 +93,11 @@ export default function Login() {
               ) : (
                 'Sign In'
               )}
-            </button>
+            </Button>
           </form>
         </div>
 
-        <p className="mt-24 text-center text-body-normal text-text-secondary">
+        <p className="mt-20 text-center text-body-normal text-text-secondary">
           Don&apos;t have an account?{' '}
           <Link
             to="/register"
@@ -118,7 +107,7 @@ export default function Login() {
           </Link>
         </p>
 
-        <p className="mt-16 text-center text-ui-caption text-text-muted">
+        <p className="mt-12 text-center text-ui-caption text-text-muted">
           JobPulse — Never miss a job posting
         </p>
       </div>

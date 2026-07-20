@@ -1,4 +1,5 @@
 import { useAlerts } from '../hooks/useAlerts';
+import { useKeywords } from '../hooks/useKeywords';
 import AlertCard from '../components/alerts/AlertCard';
 import AlertForm from '../components/alerts/AlertForm';
 import EmptyState from '../components/shared/EmptyState';
@@ -7,6 +8,7 @@ import { Bell } from 'lucide-react';
 
 const Alerts = () => {
   const { alerts, loading, error, addAlert, editAlert, removeAlert } = useAlerts();
+  const { keywords, save: saveKeyword, remove: deleteKeyword } = useKeywords();
 
   const handleToggle = (alertId, enabled) => {
     editAlert(alertId, { enabled });
@@ -21,11 +23,17 @@ const Alerts = () => {
             Manage your LinkedIn job search alerts
           </p>
         </div>
-        <AlertForm onSubmit={addAlert} alertCount={alerts.length} />
+        <AlertForm
+          onSubmit={addAlert}
+          alertCount={alerts.length}
+          keywords={keywords}
+          onSaveKeyword={saveKeyword}
+          onDeleteKeyword={deleteKeyword}
+        />
       </div>
 
       {error && (
-        <div className="p-16 bg-danger-bg border border-danger-main/20 rounded-card text-danger-main text-body-normal">
+        <div className="p-14 bg-danger-bg border border-danger-main/20 rounded-card text-danger-main text-body-normal">
           {error}
         </div>
       )}
@@ -36,10 +44,10 @@ const Alerts = () => {
         <EmptyState
           icon={Bell}
           title="No alerts yet"
-          description="Create a search alert to monitor LinkedIn for new job postings. Each alert checks for jobs posted in the last 3 days."
+          description="Create a search alert to monitor LinkedIn for new job postings. Each alert checks for jobs posted in the last 10 hours."
         />
       ) : (
-        <div className="flex flex-col gap-12">
+        <div className="flex flex-col gap-10 animate-stagger">
           {alerts.map((alert) => (
             <AlertCard
               key={alert.id}

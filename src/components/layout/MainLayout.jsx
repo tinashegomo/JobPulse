@@ -7,7 +7,7 @@ export default function MainLayout() {
     <div className="flex flex-col h-dvh w-full overflow-hidden bg-bg-subtle">
       <TopNav />
 
-      <main className="flex-1 p-4 md:p-6 md:pt-8 pb-20 lg:pb-6 overflow-y-auto scroll-smooth">
+      <main className="flex-1 p-4 md:p-6 pt-6 md:pt-8 pb-24 lg:pb-8 overflow-y-auto scroll-smooth">
         <Outlet />
       </main>
 

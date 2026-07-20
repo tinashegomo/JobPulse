@@ -15,6 +15,7 @@ import { db } from '../firebase';
 const ALERTS_collection = 'search_alerts';
 const TOKENS_collection = 'fcm_tokens';
 const NOTIFIED_collection = 'notified_jobs';
+const KEYWORDS_collection = 'saved_keywords';
 
 export const saveFCMToken = async (token, userId) => {
   const tokenRef = doc(db, TOKENS_collection, token);
@@ -93,4 +94,49 @@ export const getUserJobStates = async (userId) => {
     };
   }
   return states;
+};
+
+// ---------------------------------------------------------------------------
+// Saved Keywords
+// ---------------------------------------------------------------------------
+
+export const getKeywords = async (userId) => {
+  const q = query(
+    collection(db, KEYWORDS_collection),
+    where('userId', '==', userId)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
+export const addKeyword = async (userId, keyword) => {
+  const docRef = await addDoc(collection(db, KEYWORDS_collection), {
+    userId,
+    keyword: keyword.trim(),
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+};
+
+export const deleteKeyword = async (keywordId) => {
+  await deleteDoc(doc(db, KEYWORDS_collection, keywordId));
+};
+
+// ---------------------------------------------------------------------------
+// Hide All Jobs
+// ---------------------------------------------------------------------------
+
+export const hideAllJobs = async (userId) => {
+  const q = query(
+    collection(db, NOTIFIED_collection),
+    where('userId', '==', userId)
+  );
+  const snapshot = await getDocs(q);
+  const batch = snapshot.docs.map((d) =>
+    updateDoc(d.ref, {
+      hidden: true,
+      hiddenAt: serverTimestamp(),
+    })
+  );
+  await Promise.all(batch);
 };

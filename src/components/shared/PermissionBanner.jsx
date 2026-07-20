@@ -1,15 +1,16 @@
 import { Bell, BellOff } from 'lucide-react';
+import Button from './Button';
 
 const PermissionBanner = ({ permission, onRequestPermission }) => {
   if (permission === 'granted') return null;
 
   return (
-    <div className="glass-panel p-20 flex items-center gap-16 animate-slide-up border-l-4 border-l-warning-500">
-      <div className="shrink-0 p-12 bg-warning-bg rounded-card">
+    <div className="glass-panel p-18 flex items-center gap-14 animate-slide-up border-l-4 border-l-warning-main">
+      <div className="shrink-0 p-10 bg-warning-bg rounded-card">
         {permission === 'denied' ? (
-          <BellOff size={24} className="text-warning-main" />
+          <BellOff size={22} className="text-warning-main" />
         ) : (
-          <Bell size={24} className="text-warning-main" />
+          <Bell size={22} className="text-warning-main" />
         )}
       </div>
       <div className="flex-1">
@@ -25,12 +26,14 @@ const PermissionBanner = ({ permission, onRequestPermission }) => {
         </p>
       </div>
       {permission === 'default' && (
-        <button
+        <Button
           onClick={onRequestPermission}
-          className="px-16 py-10 bg-brand-primary text-white rounded-input text-ui-label font-medium hover:bg-brand-hover transition-colors shrink-0"
+          variant="primary"
+          size="md"
+          className="shrink-0"
         >
           Enable
-        </button>
+        </Button>
       )}
     </div>
   );

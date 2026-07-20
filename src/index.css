@@ -1,9 +1,9 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
 
   --color-primary-50: #f0f9ff;
   --color-primary-100: #e0f2fe;
@@ -126,6 +126,11 @@
   --brand-pressed: var(--color-primary-700);
   --brand-subtle:  var(--color-primary-100);
   --brand-tint:    var(--color-primary-50);
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-danger-900: #7f1d1d;
+
   --state-success-main:  var(--color-success-500);
   --state-success-bg:    var(--color-success-400);
   --state-success-hover: var(--color-success-600);
@@ -135,9 +140,10 @@
   --state-info-main:  var(--color-info-500);
   --state-info-bg:    var(--color-info-400);
   --state-info-hover: var(--color-info-600);
-  --state-danger-main:    var(--color-primary-500);
-  --state-danger-hover:   var(--color-primary-600);
-  --state-danger-pressed: var(--color-primary-700);
+  --state-danger-main:    var(--color-danger-500);
+  --state-danger-bg:      var(--color-danger-50);
+  --state-danger-hover:   var(--color-danger-600);
+  --state-danger-pressed: var(--color-danger-700);
 }
 
 .dark {
@@ -167,10 +173,10 @@
   --state-info-main:  var(--color-info-400);
   --state-info-bg:    var(--color-info-900);
   --state-info-hover: var(--color-info-500);
-  --state-danger-main:    var(--color-primary-400);
-  --state-danger-bg:      var(--color-primary-900);
-  --state-danger-hover:   var(--color-primary-500);
-  --state-danger-pressed: var(--color-primary-600);
+  --state-danger-main:    var(--color-danger-500);
+  --state-danger-bg:      var(--color-danger-900);
+  --state-danger-hover:   var(--color-danger-600);
+  --state-danger-pressed: var(--color-danger-700);
 }
 
 @theme inline {
@@ -243,6 +249,18 @@
   .animate-scale-in {
     animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+  .animate-stagger > * {
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .animate-stagger > *:nth-child(6) { animation-delay: 200ms; }
+  .animate-stagger > *:nth-child(7) { animation-delay: 240ms; }
+  .animate-stagger > *:nth-child(8) { animation-delay: 280ms; }
+  .animate-stagger > *:nth-child(n+9) { animation-delay: 320ms; }
   .hover-lift {
     @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-elevation-3;
   }

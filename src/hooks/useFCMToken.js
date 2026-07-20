@@ -4,6 +4,14 @@ import { messaging } from '../firebase';
 import { useAuth } from './useAuth';
 import { saveFCMToken } from '../api/firestoreService';
 
+const FIREBASE_SW_SCOPE = '/firebase-messaging-sw.js';
+
+async function getFirebaseSWRegistration() {
+  const existing = await navigator.serviceWorker.getRegistration(FIREBASE_SW_SCOPE);
+  if (existing) return existing;
+  return navigator.serviceWorker.register(FIREBASE_SW_SCOPE);
+}
+
 export const useFCMToken = () => {
   const { currentUser } = useAuth();
   const [permission, setPermission] = useState(
@@ -18,8 +26,10 @@ export const useFCMToken = () => {
       setPermission(result);
 
       if (result === 'granted') {
+        const swReg = await getFirebaseSWRegistration();
         const currentToken = await getToken(messaging, {
           vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+          serviceWorkerRegistration: swReg,
         });
 
         if (currentToken) {
@@ -34,9 +44,13 @@ export const useFCMToken = () => {
 
   useEffect(() => {
     if (permission === 'granted' && !token && currentUser) {
-      getToken(messaging, {
-        vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-      })
+      getFirebaseSWRegistration()
+        .then((swReg) =>
+          getToken(messaging, {
+            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+            serviceWorkerRegistration: swReg,
+          })
+        )
         .then((currentToken) => {
           if (currentToken) {
             setToken(currentToken);

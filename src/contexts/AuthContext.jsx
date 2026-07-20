@@ -9,6 +9,7 @@ import { auth } from '../firebase';
 
 const AuthContext = createContext(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthContext = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuthContext must be used within AuthProvider');

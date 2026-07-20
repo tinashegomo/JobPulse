@@ -1,21 +1,30 @@
 import { useState } from 'react';
-import { Plus, X, AlertTriangle } from 'lucide-react';
+import { Plus, X, AlertTriangle, Bookmark, BookmarkCheck } from 'lucide-react';
 import { buildLinkedInSearchUrl } from '../../utils/buildLinkedInSearchUrl';
 import CountrySelect from '../shared/CountrySelect';
+import Button from '../shared/Button';
 
 const ALERT_LIMIT = 20;
 
-const AlertForm = ({ onSubmit, alertCount = 0 }) => {
+const AlertForm = ({ onSubmit, alertCount = 0, keywords = [], onSaveKeyword }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
   const [workType, setWorkType] = useState('remote');
+  const [saveKeyword, setSaveKeyword] = useState(false);
 
   const atLimit = alertCount >= ALERT_LIMIT;
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!keyword.trim() || atLimit) return;
+
+    if (saveKeyword && onSaveKeyword) {
+      const exists = keywords.some(
+        (k) => k.keyword.toLowerCase() === keyword.trim().toLowerCase()
+      );
+      if (!exists) onSaveKeyword(keyword.trim());
+    }
 
     const label = location
       ? `${keyword.trim()} - ${location}`
@@ -38,53 +47,46 @@ const AlertForm = ({ onSubmit, alertCount = 0 }) => {
     setKeyword('');
     setLocation('');
     setWorkType('remote');
+    setSaveKeyword(false);
     setIsOpen(false);
   };
-
-  const inputBase =
-    'w-full rounded-input border bg-surface-elevated px-16 py-12 text-body-normal text-text-primary placeholder:text-text-muted outline-none transition-all duration-200';
-  const inputOk =
-    'border-border-default focus:border-border-focus focus-ring';
 
   return (
     <div className="flex flex-col gap-8">
       {atLimit && !isOpen && (
-        <div className="flex items-center gap-8 px-16 py-12 rounded-card bg-amber-50 border border-amber-200 text-amber-800 text-body-normal">
-          <AlertTriangle size={18} className="shrink-0" />
+        <div className="flex items-center gap-8 px-14 py-10 rounded-card bg-warning-bg border border-warning-main/20 text-warning-main text-body-normal">
+          <AlertTriangle size={16} className="shrink-0" />
           <span>
-            You've reached the maximum of {ALERT_LIMIT} alerts. Delete an existing alert to create a new one.
+            Maximum of {ALERT_LIMIT} alerts reached. Delete one to create a new alert.
           </span>
         </div>
       )}
 
       {!isOpen ? (
-        <button
+        <Button
           onClick={() => !atLimit && setIsOpen(true)}
           disabled={atLimit}
-          className={`flex items-center gap-8 rounded-input px-16 py-8 text-sm font-semibold transition-all duration-200 ${
-            atLimit
-              ? 'bg-surface-muted text-text-muted cursor-not-allowed'
-              : 'bg-brand-primary text-neutral-0 shadow-elevation-1 hover:bg-brand-hover hover:shadow-elevation-2 active:bg-brand-pressed press-scale'
-          }`}
+          variant={atLimit ? 'secondary' : 'primary'}
+          size="md"
         >
-          <Plus size={18} />
+          <Plus size={16} />
           New Alert
-        </button>
+        </Button>
       ) : (
-        <div className="rounded-card bg-surface-default border border-border-default shadow-elevation-2 p-24 animate-scale-in">
+        <div className="rounded-card bg-surface-default border border-border-default shadow-elevation-2 p-20 animate-scale-in">
           <div className="flex items-center justify-between mb-16">
             <h3 className="text-h3 font-semibold">Create Search Alert</h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-8 rounded-input hover:bg-surface-muted transition-colors press-scale"
+              className="p-6 rounded-input hover:bg-surface-muted transition-colors press-scale"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-16">
-            <div>
-              <label className="mb-8 block text-ui-label font-semibold text-text-secondary">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-14">
+            <div className="flex flex-col gap-6">
+              <label className="text-ui-label font-semibold text-text-secondary">
                 Job Title / Keyword *
               </label>
               <input
@@ -92,26 +94,46 @@ const AlertForm = ({ onSubmit, alertCount = 0 }) => {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="e.g. Software Engineer"
-                className={`${inputBase} ${inputOk}`}
+                className="w-full rounded-input border bg-surface-elevated px-12 py-10 text-body-normal text-text-primary placeholder:text-text-muted outline-none transition-all duration-200 border-border-default focus:border-border-focus focus-ring"
                 required
               />
+
+              {keywords.length > 0 && (
+                <div className="flex flex-wrap gap-6 mt-2">
+                  {keywords.map((k) => (
+                    <button
+                      key={k.id}
+                      type="button"
+                      onClick={() => setKeyword(k.keyword)}
+                      className={`inline-flex items-center gap-4 px-10 py-4 rounded-chip text-ui-badge font-medium transition-all duration-200 border ${
+                        keyword === k.keyword
+                          ? 'bg-brand-tint text-brand-primary border-brand-primary/30'
+                          : 'bg-surface-elevated text-text-secondary border-border-default hover:border-brand-primary/30 hover:text-brand-primary'
+                      }`}
+                    >
+                      <Bookmark size={10} />
+                      {k.keyword}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-16">
-              <div>
-                <label className="mb-8 block text-ui-label font-semibold text-text-secondary">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-14">
+              <div className="flex flex-col gap-6">
+                <label className="text-ui-label font-semibold text-text-secondary">
                   Country
                 </label>
                 <CountrySelect value={location} onChange={setLocation} />
               </div>
-              <div>
-                <label className="mb-8 block text-ui-label font-semibold text-text-secondary">
+              <div className="flex flex-col gap-6">
+                <label className="text-ui-label font-semibold text-text-secondary">
                   Work Type
                 </label>
                 <select
                   value={workType}
                   onChange={(e) => setWorkType(e.target.value)}
-                  className={`${inputBase} ${inputOk}`}
+                  className="w-full rounded-input border bg-surface-elevated px-12 py-10 text-body-normal text-text-primary placeholder:text-text-muted outline-none transition-all duration-200 border-border-default focus:border-border-focus focus-ring"
                 >
                   <option value="remote">Remote</option>
                   <option value="on-site">On-site</option>
@@ -120,24 +142,33 @@ const AlertForm = ({ onSubmit, alertCount = 0 }) => {
               </div>
             </div>
 
+            <label className="flex items-center gap-8 cursor-pointer text-body-normal text-text-secondary">
+              <input
+                type="checkbox"
+                checked={saveKeyword}
+                onChange={(e) => setSaveKeyword(e.target.checked)}
+                className="w-4 h-4 rounded border-border-default text-brand-primary accent-brand-primary"
+              />
+              <BookmarkCheck size={14} />
+              Save keyword for reuse
+            </label>
+
             <p className="text-ui-caption text-text-muted">
-              Jobs posted in the last 8 hours on LinkedIn and RemoteOK. Label: &quot;{keyword || '...'} - {location || '...'}&quot;
+              Jobs posted in the last 10 hours on LinkedIn and RemoteOK.
             </p>
 
             <div className="flex justify-end gap-8">
-              <button
+              <Button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="rounded-input px-16 py-8 text-sm font-medium text-text-secondary hover:bg-surface-muted press-scale transition-all duration-200"
+                variant="ghost"
+                size="md"
               >
                 Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-input bg-brand-primary px-16 py-8 text-sm font-semibold text-neutral-0 shadow-elevation-1 hover:bg-brand-hover hover:shadow-elevation-2 active:bg-brand-pressed press-scale transition-all duration-200"
-              >
+              </Button>
+              <Button type="submit" variant="primary" size="md">
                 Create Alert
-              </button>
+              </Button>
             </div>
           </form>
         </div>

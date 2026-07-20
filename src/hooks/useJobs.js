@@ -10,16 +10,10 @@ export const useJobs = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!currentUser) {
-      setJobs([]);
-      setLoading(false);
-      return;
-    }
+    if (!currentUser) return;
 
     let jobsData = [];
     let userStates = {};
-    let unsubJobs = null;
-    let unsubStates = null;
 
     function merge() {
       const merged = jobsData
@@ -38,13 +32,10 @@ export const useJobs = () => {
     }
 
     const jobsQuery = query(collection(db, 'jobs'), orderBy('dateDetected', 'desc'));
-    unsubJobs = onSnapshot(
+    const unsubJobs = onSnapshot(
       jobsQuery,
       (snapshot) => {
-        jobsData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        jobsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         merge();
       },
       (err) => {
@@ -57,28 +48,23 @@ export const useJobs = () => {
       collection(db, 'notified_jobs'),
       where('userId', '==', currentUser.uid)
     );
-    unsubStates = onSnapshot(
+    const unsubStates = onSnapshot(
       statesQuery,
       (snapshot) => {
         userStates = {};
         for (const doc of snapshot.docs) {
           const data = doc.data();
           const key = `${data.source}_${data.externalJobId}`;
-          userStates[key] = {
-            seen: !!data.seen,
-            hidden: !!data.hidden,
-          };
+          userStates[key] = { seen: !!data.seen, hidden: !!data.hidden };
         }
         merge();
       },
-      (err) => {
-        setError(err.message);
-      }
+      (err) => setError(err.message)
     );
 
     return () => {
-      if (unsubJobs) unsubJobs();
-      if (unsubStates) unsubStates();
+      unsubJobs();
+      unsubStates();
     };
   }, [currentUser]);
 

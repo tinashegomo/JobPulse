@@ -11,11 +11,7 @@ export const useAlerts = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!currentUser) {
-      setAlerts([]);
-      setLoading(false);
-      return;
-    }
+    if (!currentUser) return;
 
     const q = query(
       collection(db, 'search_alerts'),
