@@ -4,8 +4,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { markJobSeen, markJobUnseen, hideJob } from '../../api/firestoreService';
 import JobDetailModal from './JobDetailModal';
 
-const Dot = () => <span className="text-text-disabled text-[10px] shrink-0">·</span>;
-
 const JobCard = ({ job }) => {
   const { currentUser } = useAuth();
   const seen = job.seen;
@@ -34,68 +32,65 @@ const JobCard = ({ job }) => {
   return (
     <>
       <div
-        className={`group flex items-center gap-10 rounded-lg bg-surface-default border border-border-default px-10 py-8 transition-colors duration-150 hover:border-brand-primary/30 hover:bg-surface-muted/40 ${
+        className={`flex items-center gap-8 sm:gap-10 rounded-lg bg-surface-default border border-border-default px-8 py-8 sm:px-12 sm:py-10 transition-colors duration-150 hover:border-brand-primary/30 hover:bg-surface-muted/40 ${
           seen ? 'opacity-45' : ''
         }`}
       >
-        {/* Left: all info in two tight lines, no separate footer row */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-6">
-            <h3 className="text-[13.5px] font-semibold text-text-primary truncate leading-tight">
+          <div className="flex items-center gap-4 min-w-0">
+            <h3 className="text-[13px] sm:text-[13.5px] font-semibold text-text-primary truncate leading-tight min-w-0">
               {job.title}
             </h3>
             {seen && (
-              <span className="px-4 py-0.5 bg-success-main/10 text-success-main rounded text-[9px] font-semibold uppercase tracking-wide shrink-0">
+              <span className="px-4 py-[1px] bg-success-main/10 text-success-main rounded text-[8px] sm:text-[9px] font-semibold uppercase tracking-wide shrink-0">
                 Seen
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-4 mt-2 text-text-secondary overflow-hidden">
-            <Building2 size={11} className="shrink-0 opacity-70" />
-            <span className="text-[11.5px] font-medium truncate max-w-[30%]">{job.company}</span>
-            <Dot />
-            <MapPin size={11} className="shrink-0 opacity-70" />
-            <span className="text-[11.5px] truncate max-w-[30%]">{job.location}</span>
-            <Dot />
-            <Clock size={11} className="shrink-0 opacity-70" />
-            <span className="text-[11.5px] whitespace-nowrap">{job.postedText}</span>
-            <Dot />
-            <span className="px-4 py-[1px] bg-brand-tint text-brand-primary rounded text-[9px] font-semibold uppercase tracking-wide shrink-0">
+          <div className="flex items-center gap-4 mt-2 text-text-secondary min-w-0 overflow-hidden">
+            <Building2 size={10} className="shrink-0 opacity-60" />
+            <span className="text-[10.5px] sm:text-[11px] font-medium truncate min-w-0">{job.company}</span>
+            <span className="text-text-disabled text-[9px] shrink-0">·</span>
+            <MapPin size={10} className="shrink-0 opacity-60" />
+            <span className="text-[10.5px] sm:text-[11px] truncate min-w-0">{job.location}</span>
+            <span className="text-text-disabled text-[9px] shrink-0">·</span>
+            <Clock size={10} className="shrink-0 opacity-60" />
+            <span className="text-[10.5px] sm:text-[11px] whitespace-nowrap shrink-0">{job.postedText}</span>
+            <span className="px-4 py-[1px] bg-brand-tint text-brand-primary rounded text-[8px] sm:text-[9px] font-semibold uppercase tracking-wide shrink-0 hidden sm:inline">
               {job.source}
             </span>
           </div>
         </div>
 
-        {/* Right: compact actions, icon-only except Apply */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-4 sm:gap-8 shrink-0">
           <button
             onClick={() => setDetailOpen(true)}
             title="View details"
-            className="p-6 rounded-md text-text-muted hover:text-brand-primary hover:bg-brand-tint transition-colors"
+            className="p-4 sm:p-8 rounded-md text-text-muted hover:text-brand-primary hover:bg-brand-tint transition-colors"
           >
-            <Info size={14} />
+            <Info size={13} />
           </button>
           <button
             onClick={handleToggleSeen}
             title={seen ? 'Mark as unseen' : 'Mark as seen'}
-            className="p-6 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-muted transition-colors hidden sm:inline-flex"
+            className="p-4 sm:p-8 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-muted transition-colors hidden sm:inline-flex"
           >
-            {seen ? <EyeOff size={14} /> : <Eye size={14} />}
+            {seen ? <EyeOff size={13} /> : <Eye size={13} />}
           </button>
           <button
             onClick={handleHide}
             title="Hide from list"
-            className="p-6 rounded-md text-text-muted hover:text-danger-main hover:bg-danger-bg transition-colors hidden sm:inline-flex"
+            className="p-4 sm:p-8 rounded-md text-text-muted hover:text-danger-main hover:bg-danger-bg transition-colors hidden sm:inline-flex"
           >
-            <Trash2 size={14} />
+            <Trash2 size={13} />
           </button>
           <button
             onClick={handleApply}
-            className="flex items-center gap-4 px-10 py-5 bg-brand-primary text-white rounded-md text-[12px] font-semibold shadow-sm hover:bg-brand-hover active:bg-brand-pressed transition-all duration-150"
+            className="flex items-center gap-4 px-8 sm:px-12 py-4 sm:py-8 bg-brand-primary text-white rounded-md text-[11px] sm:text-[12px] font-semibold shadow-sm hover:bg-brand-hover active:bg-brand-pressed transition-all duration-150"
           >
             Apply
-            <ExternalLink size={11} />
+            <ExternalLink size={10} />
           </button>
         </div>
       </div>

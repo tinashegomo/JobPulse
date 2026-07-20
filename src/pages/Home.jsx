@@ -47,6 +47,7 @@ const Home = () => {
             <Button
               variant="danger"
               size="sm"
+              className="px-6 sm:px-10"
               onClick={() => setClearModalOpen(true)}
             >
               <Trash2 size={14} />
@@ -79,7 +80,7 @@ const Home = () => {
           description="Jobs will appear here as they're detected by the scraper. Make sure your search alerts are set up and the backend is running."
         />
       ) : (
-        <div className="flex flex-col gap-28">
+        <div className="flex flex-col gap-16">
           {groups.map((group) => (
             <div key={group.label} className="flex flex-col gap-10">
               <h2 className="text-ui-label font-semibold text-text-muted uppercase tracking-wider">
