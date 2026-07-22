@@ -2,10 +2,15 @@ import { ExternalLink, MapPin, Building2, Clock, Briefcase } from 'lucide-react'
 import Modal from '../shared/Modal';
 import { formatJobDescription } from '../../utils/formatJobDescription';
 
-const JobDetailModal = ({ job, open, onClose }) => {
+const JobDetailModal = ({ job, open, onClose, onApply }) => {
   if (!job) return null;
 
   const formattedDescription = formatJobDescription(job.description);
+
+  const handleApply = () => {
+    if (onApply) onApply();
+    onClose();
+  };
 
   return (
     <Modal open={open} onClose={onClose} title="Job Details">
@@ -53,15 +58,13 @@ const JobDetailModal = ({ job, open, onClose }) => {
           </div>
         )}
 
-        <a
-          href={job.jobUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={handleApply}
           className="inline-flex items-center justify-center gap-6 px-16 py-9 bg-brand-primary text-white rounded-input text-[13px] font-semibold shadow-elevation-1 hover:bg-brand-hover hover:shadow-elevation-2 active:bg-brand-pressed press-scale transition-all duration-200"
         >
           Apply Now
           <ExternalLink size={13} />
-        </a>
+        </button>
       </div>
     </Modal>
   );

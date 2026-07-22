@@ -32,8 +32,10 @@ const JobCard = ({ job }) => {
   return (
     <>
       <div
-        className={`flex items-center gap-8 sm:gap-10 rounded-lg bg-surface-default border border-border-default px-8 py-8 sm:px-12 sm:py-10 transition-colors duration-150 hover:border-brand-primary/30 hover:bg-surface-muted/40 ${
-          seen ? 'opacity-45' : ''
+        className={`flex items-center gap-8 sm:gap-10 rounded-lg border px-8 py-8 sm:px-12 sm:py-10 transition-colors duration-150 hover:border-brand-primary/30 ${
+          seen
+            ? 'bg-success-main/8 border-success-main/15'
+            : 'bg-surface-default border-border-default hover:bg-surface-muted/40'
         }`}
       >
         <div className="flex-1 min-w-0">
@@ -99,6 +101,7 @@ const JobCard = ({ job }) => {
         job={job}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
+        onApply={handleApply}
       />
     </>
   );
