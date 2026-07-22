@@ -83,7 +83,7 @@ const JobCard = ({ job }) => {
           <button
             onClick={handleHide}
             title="Hide from list"
-            className="p-4 sm:p-8 rounded-md text-text-muted hover:text-danger-main hover:bg-danger-bg transition-colors hidden sm:inline-flex"
+            className="p-4 sm:p-8 rounded-md text-text-muted hover:text-danger-main hover:bg-danger-bg transition-colors"
           >
             <Trash2 size={13} />
           </button>
