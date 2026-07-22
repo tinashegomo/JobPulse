@@ -2,51 +2,105 @@ import { useAlerts } from '../hooks/useAlerts';
 import { useKeywords } from '../hooks/useKeywords';
 import AlertCard from '../components/alerts/AlertCard';
 import AlertForm from '../components/alerts/AlertForm';
+import PageHeader from '../components/layout/PageHeader';
 import EmptyState from '../components/shared/EmptyState';
-import LoadingSpinner from '../components/shared/LoadingSpinner';
-import { Bell } from 'lucide-react';
+import SkeletonJobCard from '../components/shared/SkeletonJobCard';
+import StatCard from '../components/shared/StatCard';
+import FilterChip from '../components/shared/FilterChip';
+import { Bell, Bookmark, CheckCircle2 } from 'lucide-react';
 
-const Alerts = () => {
+export default function Alerts() {
   const { alerts, loading, error, addAlert, editAlert, removeAlert } = useAlerts();
-  const { keywords, save: saveKeyword } = useKeywords();
+  const { keywords, save: saveKeyword, remove: removeKeyword } = useKeywords();
 
   const handleToggle = (alertId, enabled) => {
     editAlert(alertId, { enabled });
   };
 
+  const activeCount = alerts.filter((a) => a.enabled !== false).length;
+
   return (
-    <div className="flex flex-col gap-24">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-h1 font-bold">Search Alerts</h1>
-          <p className="mt-4 text-body-normal text-text-secondary">
-            Manage your LinkedIn job search alerts
-          </p>
-        </div>
-        <AlertForm
-          onSubmit={addAlert}
-          alertCount={alerts.length}
-          keywords={keywords}
-          onSaveKeyword={saveKeyword}
+    <div className="flex flex-col gap-5 pb-6">
+      {/* Header */}
+      <PageHeader
+        title="Search Alerts"
+        subtitle="Manage search queries monitored by the scraper"
+        action={
+          <AlertForm
+            onSubmit={addAlert}
+            alertCount={alerts.length}
+            keywords={keywords}
+            onSaveKeyword={saveKeyword}
+          />
+        }
+      />
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard
+          label="Active Alerts"
+          value={activeCount}
+          icon={CheckCircle2}
+        />
+        <StatCard
+          label="Saved Keywords"
+          value={keywords.length}
+          icon={Bookmark}
         />
       </div>
 
+      {/* Saved Keywords Row */}
+      {keywords.length > 0 && (
+        <div className="flex flex-col gap-2 pt-1">
+          <span className="text-[12px] font-semibold text-text-muted uppercase tracking-wider px-1">
+            Quick Keywords
+          </span>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {keywords.map((k) => (
+              <FilterChip
+                key={k.id}
+                label={k.keyword}
+                onClick={() => removeKeyword(k.id)}
+                className="hover:border-danger-main/30 hover:text-danger-main"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
       {error && (
-        <div className="p-14 bg-danger-bg border border-danger-main/20 rounded-card text-danger-main text-body-normal">
+        <div className="p-4 bg-danger-bg border border-danger-main/20 rounded-[12px] text-danger-main text-[13px] font-medium">
           {error}
         </div>
       )}
 
+      {/* Loading state */}
       {loading ? (
-        <LoadingSpinner text="Loading alerts..." />
+        <div className="flex flex-col gap-3">
+          <SkeletonJobCard />
+          <SkeletonJobCard />
+        </div>
       ) : alerts.length === 0 ? (
         <EmptyState
           icon={Bell}
-          title="No alerts yet"
-          description="Create a search alert to monitor LinkedIn for new job postings. Each alert checks for jobs posted in the last 10 hours."
+          title="No search alerts set"
+          description="Create a search alert to start monitoring job boards for matching positions."
+          action={
+            <AlertForm
+              onSubmit={addAlert}
+              alertCount={alerts.length}
+              keywords={keywords}
+              onSaveKeyword={saveKeyword}
+            />
+          }
         />
       ) : (
-        <div className="flex flex-col gap-10 animate-stagger">
+        /* Alerts List */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-stagger pt-1">
+          <span className="text-[12px] font-semibold text-text-muted uppercase tracking-wider px-1">
+            Your Alerts ({alerts.length})
+          </span>
           {alerts.map((alert) => (
             <AlertCard
               key={alert.id}
@@ -59,6 +113,4 @@ const Alerts = () => {
       )}
     </div>
   );
-};
-
-export default Alerts;
+}

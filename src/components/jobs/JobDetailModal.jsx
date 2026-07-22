@@ -1,8 +1,11 @@
-import { ExternalLink, MapPin, Building2, Clock, Briefcase } from 'lucide-react';
+import { ExternalLink, Building2 } from 'lucide-react';
 import Modal from '../shared/Modal';
+import Badge from '../shared/Badge';
+import InfoRow from '../shared/InfoRow';
+import Button from '../shared/Button';
 import { formatJobDescription } from '../../utils/formatJobDescription';
 
-const JobDetailModal = ({ job, open, onClose, onApply }) => {
+export default function JobDetailModal({ job, open, onClose, onApply }) {
   if (!job) return null;
 
   const formattedDescription = formatJobDescription(job.description);
@@ -14,60 +17,60 @@ const JobDetailModal = ({ job, open, onClose, onApply }) => {
 
   return (
     <Modal open={open} onClose={onClose} title="Job Details">
-      <div className="flex flex-col gap-14">
-        <div>
-          <h2 className="text-[19px] font-bold text-text-primary leading-snug">
-            {job.title}
-          </h2>
-          <div className="flex items-center gap-6 mt-4 text-text-secondary">
-            <Building2 size={13} className="opacity-70" />
-            <span className="text-[13px] font-medium">{job.company}</span>
+      <div className="flex flex-col gap-4">
+        {/* Company + Source Header */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Building2 className="w-4 h-4 text-text-muted shrink-0" />
+            <span className="text-[14px] font-medium text-text-secondary truncate">
+              {job.company}
+            </span>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-6">
-          <div className="flex items-center gap-5 px-8 py-3 bg-surface-muted rounded-chip text-[11.5px] text-text-secondary">
-            <MapPin size={12} />
-            {job.location}
-          </div>
-          <div className="flex items-center gap-5 px-8 py-3 bg-surface-muted rounded-chip text-[11.5px] text-text-secondary">
-            <Clock size={12} />
-            {job.postedText}
-          </div>
-          <div className="flex items-center gap-5 px-8 py-3 bg-brand-tint rounded-chip text-[11.5px] text-brand-primary font-semibold">
-            <Briefcase size={12} />
+          <Badge variant={job.source === 'LINKEDIN' ? 'brand' : 'info'}>
             {job.source}
-          </div>
+          </Badge>
         </div>
 
-        <div className="border-t border-border-default/60" />
+        {/* Role Title */}
+        <h2 className="text-[20px] font-bold text-text-primary leading-tight">
+          {job.title}
+        </h2>
 
+        {/* Metadata Row */}
+        <InfoRow
+          location={job.location}
+          postedText={job.postedText}
+          salary={job.salary}
+          jobType={job.jobType}
+        />
+
+        <div className="border-t border-border-default/60 my-1" />
+
+        {/* Description Section */}
         {formattedDescription ? (
-          <div className="flex flex-col gap-6">
-            <h3 className="text-[13px] font-semibold text-text-primary uppercase tracking-wide">
+          <div className="flex flex-col gap-2">
+            <h3 className="text-[12px] font-semibold text-text-muted uppercase tracking-wider">
               Description
             </h3>
             <div
-              className="prose prose-sm max-w-none text-[13.5px] text-text-secondary leading-relaxed [&_ul]:list-disc [&_ul]:pl-18 [&_ul]:my-6 [&_ol]:list-decimal [&_ol]:pl-18 [&_ol]:my-6 [&_li]:my-3 [&_li]:pl-2 [&_p]:my-5 [&_strong]:text-text-primary [&_strong]:font-semibold [&_a]:text-brand-primary [&_a]:underline [&_a]:underline-offset-2 [&_h4]:text-[14px] [&_h4]:font-bold [&_h4]:text-text-primary [&_h4]:mt-8 [&_h4]:mb-3"
+              className="prose prose-sm max-w-none text-[14px] text-text-secondary leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-1 [&_p]:my-2 [&_strong]:text-text-primary [&_strong]:font-semibold [&_a]:text-brand-primary [&_a]:underline"
               dangerouslySetInnerHTML={{ __html: formattedDescription }}
             />
           </div>
         ) : (
-          <div className="py-10 text-center text-[12.5px] text-text-muted bg-surface-muted rounded-card">
-            Full description not available. Visit the job listing to see complete details.
+          <div className="py-8 text-center text-[13px] text-text-muted bg-surface-muted rounded-[12px]">
+            Full description not available in preview. Tap below to view on {job.source || 'source'}.
           </div>
         )}
 
-        <button
-          onClick={handleApply}
-          className="inline-flex items-center justify-center gap-6 px-16 py-9 bg-brand-primary text-white rounded-input text-[13px] font-semibold shadow-elevation-1 hover:bg-brand-hover hover:shadow-elevation-2 active:bg-brand-pressed press-scale transition-all duration-200"
-        >
-          Apply Now
-          <ExternalLink size={13} />
-        </button>
+        {/* CTA Action */}
+        <div className="pt-3">
+          <Button fullWidth size="lg" variant="primary" onClick={handleApply}>
+            <span>Apply Now</span>
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </Modal>
   );
-};
-
-export default JobDetailModal;
+}

@@ -48,30 +48,30 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg-subtle px-16 py-24 animate-fade-in">
-      <div className="w-full max-w-[420px]">
-        <div className="rounded-card bg-surface-default p-28 shadow-elevation-3 animate-slide-up">
-          <div className="mb-24 text-center">
-            <div className="mx-auto mb-16 flex h-14 w-14 items-center justify-center rounded-input bg-brand-primary text-neutral-0 shadow-elevation-2">
-              <Briefcase className="w-7 h-7" />
+    <div className="flex min-h-dvh items-center justify-center bg-bg-default px-4 py-8 animate-fade-in">
+      <div className="w-full max-w-[400px] flex flex-col gap-6">
+        <div className="rounded-[20px] bg-surface-default border border-border-default p-6 shadow-sm flex flex-col gap-5">
+          <div className="text-center flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-[14px] bg-brand-primary text-white flex items-center justify-center shadow-none mb-1">
+              <Briefcase className="w-6 h-6" />
             </div>
-            <h1 className="text-h2 font-bold text-text-primary">
+            <h1 className="text-[22px] font-bold text-text-primary tracking-tight">
               Create Account
             </h1>
-            <p className="mt-8 text-body-normal text-text-secondary">
-              Start tracking jobs with JobPulse
+            <p className="text-[14px] text-text-secondary">
+              Start tracking jobs instantly with JobPulse
             </p>
           </div>
 
           {error && (
-            <div className="mb-18 rounded-input border border-danger-main bg-danger-bg px-14 py-10 text-body-small text-danger-main animate-fade-in">
+            <div className="p-3.5 rounded-[12px] border border-danger-main/20 bg-danger-bg text-[13px] font-medium text-danger-main text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-18">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
-              label="Email"
+              label="Email Address"
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
@@ -100,37 +100,39 @@ export default function Register() {
               required
             />
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              disabled={submitting}
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-14 w-14 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                'Create Account'
-              )}
-            </Button>
+            <div className="pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Creating account...</span>
+                  </div>
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+            </div>
           </form>
         </div>
 
-        <p className="mt-20 text-center text-body-normal text-text-secondary">
+        <p className="text-center text-[14px] text-text-secondary">
           Already have an account?{' '}
           <Link
-            to="/login"
-            className="font-semibold text-brand-primary transition-colors hover:text-brand-hover"
+            to="/register"
+            className="font-semibold text-brand-primary hover:text-brand-hover transition-colors"
           >
             Sign in
           </Link>
         </p>
 
-        <p className="mt-12 text-center text-ui-caption text-text-muted">
-          JobPulse — Never miss a job posting
+        <p className="text-center text-[12px] text-text-muted">
+          JobPulse — Doorbell camera for job postings
         </p>
       </div>
     </div>

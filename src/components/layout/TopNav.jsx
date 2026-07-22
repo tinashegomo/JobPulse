@@ -4,8 +4,8 @@ import { LogOut, ChevronDown, Briefcase, Bell } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const PRIMARY_LINKS = [
-  { to: '/', label: 'Jobs', icon: <Briefcase size={18} /> },
-  { to: '/alerts', label: 'Alerts', icon: <Bell size={18} /> },
+  { to: '/', label: 'Jobs', icon: <Briefcase size={20} /> },
+  { to: '/alerts', label: 'Alerts', icon: <Bell size={20} /> },
 ];
 
 export default function TopNav() {
@@ -27,7 +27,7 @@ export default function TopNav() {
   };
 
   return (
-    <header className="hidden lg:flex items-center h-14 px-6 md:px-8 bg-surface-default border-b border-border-default shadow-sm sticky top-0 z-40">
+    <header className="hidden lg:flex items-center h-14 px-6 md:px-8 lg:px-[max(2rem,calc((100vw-1140px)/2))] bg-surface-default border-b border-border-default shadow-sm sticky top-0 z-40">
 
       {/* Left: Brand */}
       <div className="flex items-center gap-2 min-w-[160px]">

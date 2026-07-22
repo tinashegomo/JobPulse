@@ -1,28 +1,43 @@
-const Input = ({
+/**
+ * Input primitive enforcing:
+ * - Height: 48px (h-12)
+ * - Radius: 12px (rounded-[12px])
+ * - Padding: 16px horizontal (px-4)
+ * - Clear label and modern subtle error text
+ */
+export default function Input({
   label,
   error,
+  helperText,
   className = '',
   containerClassName = '',
   ...props
-}) => {
+}) {
   return (
-    <div className={`flex flex-col gap-6 ${containerClassName}`}>
+    <div className={`flex flex-col gap-1.5 w-full ${containerClassName}`}>
       {label && (
-        <label className="text-ui-label font-semibold text-text-secondary">
+        <label className="text-[13px] font-medium text-text-secondary leading-tight">
           {label}
         </label>
       )}
       <input
-        className={`w-full rounded-input border bg-surface-elevated px-12 py-10 text-body-normal text-text-primary placeholder:text-text-muted outline-none transition-all duration-200 border-border-default focus:border-border-focus focus-ring ${
-          error ? 'border-danger-main focus:border-danger-main' : ''
+        className={`w-full h-12 px-4 rounded-[12px] border bg-surface-default text-[14px] text-text-primary placeholder:text-text-muted transition-all duration-150 outline-none ${
+          error
+            ? 'border-danger-main focus:ring-2 focus:ring-danger-main/20'
+            : 'border-border-default focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20'
         } ${className}`}
         {...props}
       />
       {error && (
-        <span className="text-ui-caption text-danger-main">{error}</span>
+        <span className="text-[12px] font-medium text-danger-main">
+          {error}
+        </span>
+      )}
+      {!error && helperText && (
+        <span className="text-[12px] text-text-muted">
+          {helperText}
+        </span>
       )}
     </div>
   );
-};
-
-export default Input;
+}
