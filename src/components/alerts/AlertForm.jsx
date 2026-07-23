@@ -20,8 +20,7 @@ export default function AlertForm({ onSubmit, alertCount = 0, keywords = [], onS
 
   const filteredKeywords = keyword.trim()
     ? keywords.filter((k) =>
-        k.keyword.toLowerCase().includes(keyword.trim().toLowerCase()) &&
-        k.keyword.toLowerCase() !== keyword.trim().toLowerCase()
+        k.keyword.toLowerCase().includes(keyword.trim().toLowerCase())
       )
     : keywords;
 
