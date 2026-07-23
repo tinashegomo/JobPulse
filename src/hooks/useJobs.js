@@ -24,7 +24,7 @@ export const useJobs = () => {
         })
         .filter((job) => {
           const company = (job.company || '').toLowerCase();
-          return !['hire feed', 'hired', 'quick hire staffing', 'crossing hurdles'].includes(company);
+          return !['hire feed', 'hired', 'quick hire staffing', 'quik hire staffing', 'crossing hurdles'].includes(company);
         })
         .map((job) => {
           const key = `${job.source}_${job.externalJobId}`;
