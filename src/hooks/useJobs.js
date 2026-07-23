@@ -23,9 +23,8 @@ export const useJobs = () => {
           return !state?.hidden;
         })
         .filter((job) => {
-          const title = (job.title || '').toLowerCase();
           const company = (job.company || '').toLowerCase();
-          return title !== 'hire feed' && company !== 'quick hire staffing';
+          return !['hire feed', 'hired', 'quick hire staffing', 'crossing hurdles'].includes(company);
         })
         .map((job) => {
           const key = `${job.source}_${job.externalJobId}`;
