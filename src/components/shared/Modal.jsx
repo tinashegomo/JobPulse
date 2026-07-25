@@ -37,7 +37,7 @@ export default function Modal({ open, onClose, title, children, className = '' }
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative w-full sm:max-w-[440px] max-h-[90vh] sm:max-h-[85vh] rounded-t-[20px] sm:rounded-[20px] bg-surface-default border border-border-default shadow-xl flex flex-col animate-scale-in z-10 ${className}`}
+        className={`relative w-full sm:max-w-[440px] max-h-[calc(100vh-80px)] sm:max-h-[85vh] mb-[72px] sm:mb-0 rounded-t-[20px] sm:rounded-[20px] bg-surface-default border border-border-default shadow-xl flex flex-col animate-scale-in z-10 ${className}`}
       >
         <div className="flex items-center justify-between px-6 py-5 border-b border-border-default shrink-0">
           <h2 id="modal-title" className="text-[18px] font-semibold text-text-primary tracking-tight">
