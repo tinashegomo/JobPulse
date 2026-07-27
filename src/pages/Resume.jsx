@@ -7,13 +7,9 @@ import Button from '../components/shared/Button';
 import { Upload, FileText, Sparkles, User, Briefcase, Code, Wrench, FolderOpen, GraduationCap, MapPin, CheckCircle2, X, Loader2 } from 'lucide-react';
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
+import { generateJSON } from '../lib/gemini';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
-const GEMINI_URL =
-  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ACCEPTED_TYPES = {
@@ -47,8 +43,8 @@ async function extractTextFromFile(file) {
 }
 
 async function analyzeResumeWithAI(resumeText) {
-  if (!GEMINI_API_KEY || !resumeText) {
-    console.warn('[Resume AI] Missing VITE_GEMINI_API_KEY or resumeText — skipping analysis');
+  if (!resumeText) {
+    console.warn('[Resume AI] resumeText missing — skipping analysis');
     return null;
   }
 
@@ -73,27 +69,11 @@ Extract the following in ONLY raw JSON (no markdown, no code fences):
 }`;
 
   try {
-    const response = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => 'Could not read error body');
-      console.error(`[Resume AI] Gemini API error: HTTP ${response.status}`, errorBody);
+    const parsed = await generateJSON(prompt);
+    if (!parsed) {
+      console.error('[Resume AI] Gemini returned no parseable data');
       return null;
     }
-
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawText) {
-      console.error('[Resume AI] Gemini returned no text:', JSON.stringify(data).slice(0, 500));
-      return null;
-    }
-
-    const cleaned = rawText.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
     console.log('[Resume AI] Resume analyzed successfully:', Object.keys(parsed));
     return parsed;
   } catch (err) {
