@@ -1,16 +1,54 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import PageHeader from '../components/layout/PageHeader';
 import Button from '../components/shared/Button';
-import { Save, CheckCircle2, FileText, Sparkles, User, Briefcase, Code, Wrench, FolderOpen, GraduationCap, MapPin } from 'lucide-react';
+import { Upload, FileText, Sparkles, User, Briefcase, Code, Wrench, FolderOpen, GraduationCap, MapPin, CheckCircle2, X, Loader2 } from 'lucide-react';
+import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_URL =
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const ACCEPTED_TYPES = {
+  'application/pdf': '.pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+};
+
+async function extractTextFromPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strings = content.items.map((item) => item.str);
+    pages.push(strings.join(' '));
+  }
+  return pages.join('\n\n');
+}
+
+async function extractTextFromDOCX(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
+}
+
+async function extractTextFromFile(file) {
+  if (file.type === 'application/pdf') return extractTextFromPDF(file);
+  if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return extractTextFromDOCX(file);
+  throw new Error('Unsupported file type');
+}
 
 async function analyzeResumeWithAI(resumeText) {
   if (!GEMINI_API_KEY || !resumeText) {
-    console.warn('[Resume AI] GEMINI_API_KEY or resumeText missing — skipping analysis');
+    console.warn('[Resume AI] Missing VITE_GEMINI_API_KEY or resumeText — skipping analysis');
     return null;
   }
 
@@ -35,15 +73,11 @@ Extract the following in ONLY raw JSON (no markdown, no code fences):
 }`;
 
   try {
-    console.log('[Resume AI] Calling Gemini API for resume analysis...');
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      }
-    );
+    const response = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    });
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => 'Could not read error body');
@@ -54,7 +88,7 @@ Extract the following in ONLY raw JSON (no markdown, no code fences):
     const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!rawText) {
-      console.error('[Resume AI] Gemini returned no text. Response:', JSON.stringify(data).slice(0, 500));
+      console.error('[Resume AI] Gemini returned no text:', JSON.stringify(data).slice(0, 500));
       return null;
     }
 
@@ -94,13 +128,17 @@ function SummarySection({ label, icon: Icon, items, text }) {
 
 export default function Resume() {
   const { currentUser } = useAuth();
+  const fileInputRef = useRef(null);
   const [resumeText, setResumeText] = useState('');
   const [summary, setSummary] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!currentUser) return;
@@ -111,6 +149,7 @@ export default function Resume() {
           const data = snap.data();
           setResumeText(data.resumeText || '');
           setSummary(data.summary || null);
+          setFileName(data.originalFileName || '');
           if (data.updatedAt?.toDate) {
             setLastUpdated(data.updatedAt.toDate());
           }
@@ -124,16 +163,38 @@ export default function Resume() {
     fetchResume();
   }, [currentUser]);
 
-  const handleSave = async () => {
-    if (!currentUser || !resumeText.trim()) return;
-    setSaving(true);
-    setAnalyzing(true);
+  const processFile = useCallback(async (file) => {
+    if (!file) return;
+    setError('');
+
+    if (!Object.keys(ACCEPTED_TYPES).includes(file.type)) {
+      setError('Unsupported file type. Please upload a PDF or DOCX.');
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File too large. Maximum size is 5 MB.');
+      return;
+    }
+
+    setUploading(true);
     try {
-      const aiSummary = await analyzeResumeWithAI(resumeText.trim());
+      const text = await extractTextFromFile(file);
+      if (!text || text.trim().length < 10) {
+        setError('Could not extract meaningful text from this file. Try a different resume.');
+        return;
+      }
+      setResumeText(text);
+      setFileName(file.name);
+      setAnalyzing(true);
+
+      const aiSummary = await analyzeResumeWithAI(text.trim());
+      if (!currentUser) return;
 
       await setDoc(doc(db, 'resumes', currentUser.uid), {
-        resumeText: resumeText.trim(),
+        resumeText: text.trim(),
         summary: aiSummary,
+        originalFileName: file.name,
         updatedAt: new Date(),
       });
 
@@ -141,41 +202,157 @@ export default function Resume() {
       setLastUpdated(new Date());
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      // silent
+    } catch (err) {
+      console.error('[Resume] Error processing file:', err);
+      setError('Failed to process file. Please try again.');
     } finally {
-      setSaving(false);
+      setUploading(false);
       setAnalyzing(false);
     }
-  };
+  }, [currentUser]);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    processFile(file);
+  }, [processFile]);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragActive(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setDragActive(false);
+  }, []);
+
+  const handleFileChange = useCallback((e) => {
+    const file = e.target.files?.[0];
+    processFile(file);
+  }, [processFile]);
+
+  const handleRemove = useCallback(async () => {
+    if (!currentUser) return;
+    setResumeText('');
+    setSummary(null);
+    setFileName('');
+    setLastUpdated(null);
+    try {
+      await setDoc(doc(db, 'resumes', currentUser.uid), {
+        resumeText: '',
+        summary: null,
+        originalFileName: '',
+        updatedAt: new Date(),
+      });
+    } catch {
+      // silent
+    }
+  }, [currentUser]);
 
   return (
     <div className="flex flex-col gap-5 pb-6">
       <PageHeader
         title="Resume"
-        subtitle="Paste your CV for personalized job matching"
+        subtitle="Upload your resume for personalized job matching"
       />
 
       <div className="flex flex-col gap-4">
         <div className="flex items-start gap-3 p-4 rounded-[12px] bg-brand-primary/5 border border-brand-primary/15">
           <FileText className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
           <p className="text-[13px] text-text-secondary leading-relaxed">
-            Paste your full CV/resume below. The AI will analyze it to understand your skills,
+            Upload your resume as a PDF or DOCX. The AI will automatically extract your skills,
             tools, projects, and experience — then use this to personally score how well each
-            job matches your background. This never affects which jobs you see, only how
-            they're sorted and filtered.
+            job matches your background.
           </p>
         </div>
 
         {loading ? (
           <div className="h-48 rounded-[12px] bg-surface-muted animate-pulse" />
+        ) : !resumeText ? (
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+            className={`flex flex-col items-center justify-center gap-3 p-10 rounded-[12px] border-2 border-dashed cursor-pointer transition-all duration-150 ${
+              dragActive
+                ? 'border-brand-primary bg-brand-primary/5'
+                : 'border-border-default bg-surface-default hover:border-brand-primary/40 hover:bg-surface-muted'
+            }`}
+          >
+            <Upload className={`w-8 h-8 ${dragActive ? 'text-brand-primary' : 'text-text-muted'}`} />
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[14px] font-medium text-text-primary">
+                {dragActive ? 'Drop your resume here' : 'Drag & drop your resume'}
+              </span>
+              <span className="text-[12px] text-text-muted">
+                or <span className="text-brand-primary font-medium">browse files</span>
+              </span>
+            </div>
+            <span className="text-[11px] text-text-muted">PDF or DOCX — Max 5 MB</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
         ) : (
-          <textarea
-            value={resumeText}
-            onChange={(e) => setResumeText(e.target.value)}
-            placeholder="Paste your full CV here — include your skills, tools, projects, work experience, education, and any other relevant details..."
-            className="w-full min-h-[280px] p-4 rounded-[12px] border border-border-default bg-surface-default text-[15px] text-text-primary placeholder:text-text-muted resize-y transition-all duration-150 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 leading-relaxed"
-          />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between p-4 rounded-[12px] bg-surface-elevated border border-border-default">
+              <div className="flex items-center gap-3 min-w-0">
+                <FileText className="w-5 h-5 text-brand-primary shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-text-primary truncate">{fileName}</p>
+                  <p className="text-[11px] text-text-muted">{Math.ceil(resumeText.length / 5)} chars extracted</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {analyzing && (
+                  <div className="flex items-center gap-1.5 text-brand-primary">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-[12px] font-medium">Analyzing...</span>
+                  </div>
+                )}
+                {saved && (
+                  <span className="flex items-center gap-1 text-[13px] text-success-main font-medium">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Saved
+                  </span>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemove(); }}
+                  className="p-1.5 rounded-[8px] text-text-muted hover:text-danger-main hover:bg-danger-main/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="text-[12px] text-brand-primary font-medium hover:underline cursor-pointer self-start"
+            >
+              Replace resume
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 rounded-[12px] bg-danger-main/10 border border-danger-main/20">
+            <X className="w-4 h-4 text-danger-main shrink-0" />
+            <p className="text-[13px] text-danger-main">{error}</p>
+          </div>
         )}
 
         <div className="flex items-center justify-between gap-3">
@@ -183,24 +360,6 @@ export default function Resume() {
             {lastUpdated && (
               <span>Last updated: {lastUpdated.toLocaleDateString()} {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            {saved && (
-              <span className="flex items-center gap-1.5 text-[13px] text-success-main font-medium animate-slide-up">
-                <CheckCircle2 className="w-4 h-4" />
-                Saved
-              </span>
-            )}
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleSave}
-              disabled={saving || !resumeText.trim()}
-              className="gap-2"
-            >
-              <Save className="w-4 h-4" />
-              {analyzing ? 'Analyzing...' : saving ? 'Saving...' : 'Save & Analyze'}
-            </Button>
           </div>
         </div>
       </div>
@@ -262,7 +421,7 @@ export default function Resume() {
         <div className="flex items-center gap-3 p-4 rounded-[12px] bg-surface-muted border border-border-default">
           <Sparkles className="w-5 h-5 text-text-muted shrink-0" />
           <p className="text-[13px] text-text-muted">
-            Save your resume to see the AI analysis of your skills, tools, and experience.
+            Your resume is saved. Upload a new file to re-analyze.
           </p>
         </div>
       )}
