@@ -9,7 +9,10 @@ import { Save, CheckCircle2, FileText, Sparkles, User, Briefcase, Code, Wrench, 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 async function analyzeResumeWithAI(resumeText) {
-  if (!GEMINI_API_KEY || !resumeText) return null;
+  if (!GEMINI_API_KEY || !resumeText) {
+    console.warn('[Resume AI] GEMINI_API_KEY or resumeText missing — skipping analysis');
+    return null;
+  }
 
   const prompt = `Analyze this resume/CV and extract structured information. Be thorough and specific.
 
@@ -32,6 +35,7 @@ Extract the following in ONLY raw JSON (no markdown, no code fences):
 }`;
 
   try {
+    console.log('[Resume AI] Calling Gemini API for resume analysis...');
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
@@ -41,15 +45,25 @@ Extract the following in ONLY raw JSON (no markdown, no code fences):
       }
     );
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => 'Could not read error body');
+      console.error(`[Resume AI] Gemini API error: HTTP ${response.status}`, errorBody);
+      return null;
+    }
 
     const data = await response.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawText) return null;
+    if (!rawText) {
+      console.error('[Resume AI] Gemini returned no text. Response:', JSON.stringify(data).slice(0, 500));
+      return null;
+    }
 
     const cleaned = rawText.replace(/```json|```/g, '').trim();
-    return JSON.parse(cleaned);
-  } catch {
+    const parsed = JSON.parse(cleaned);
+    console.log('[Resume AI] Resume analyzed successfully:', Object.keys(parsed));
+    return parsed;
+  } catch (err) {
+    console.error('[Resume AI] Exception during analysis:', err.message, err.stack);
     return null;
   }
 }
