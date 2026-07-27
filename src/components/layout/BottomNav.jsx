@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Briefcase, Bell } from 'lucide-react';
+import { LogOut, Briefcase, Bell, FileText } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const NAV_ITEMS = [
@@ -80,6 +80,15 @@ export default function BottomNav() {
                   {currentUser?.email || 'User'}
                 </p>
               </div>
+
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); navigate('/resume'); }}
+                className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-[10px] text-[13px] font-medium text-text-secondary hover:bg-surface-muted transition-colors cursor-pointer"
+              >
+                <FileText className="w-5 h-5" />
+                <span>My Resume</span>
+              </button>
 
               <button
                 type="button"

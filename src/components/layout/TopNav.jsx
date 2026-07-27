@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, ChevronDown, Briefcase, Bell } from 'lucide-react';
+import { LogOut, ChevronDown, Briefcase, Bell, FileText } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const PRIMARY_LINKS = [
@@ -91,6 +91,14 @@ export default function TopNav() {
               </div>
 
               <div className="border-t border-border-default py-1">
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); navigate('/resume'); }}
+                  className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-muted transition-colors"
+                >
+                  <FileText className="w-5 h-5" />
+                  My Resume
+                </button>
                 <button
                   type="button"
                   onMouseDown={(e) => {

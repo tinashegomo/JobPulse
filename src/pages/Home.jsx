@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useJobs } from '../hooks/useJobs';
 import { useFCMToken } from '../hooks/useFCMToken';
 import { useAuth } from '../hooks/useAuth';
-import { hideAllJobs } from '../api/firestoreService';
+import { deleteAllUserJobs } from '../api/firestoreService';
 import JobCard from '../components/jobs/JobCard';
 import PageHeader from '../components/layout/PageHeader';
 import PermissionBanner from '../components/shared/PermissionBanner';
@@ -21,7 +21,7 @@ export default function Home() {
   const { permission, requestPermission } = useFCMToken();
   const { currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all'); // all, unseen, linkedin, remoteok
+  const [activeFilter, setActiveFilter] = useState('all'); // all, unseen, linkedin, remoteok, top, other
   const [clearModalOpen, setClearModalOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
 
@@ -32,6 +32,8 @@ export default function Home() {
       if (activeFilter === 'unseen' && job.seen) return false;
       if (activeFilter === 'linkedin' && job.source !== 'LINKEDIN') return false;
       if (activeFilter === 'remoteok' && job.source !== 'REMOTEOK') return false;
+      if (activeFilter === 'top' && (job.matchScore === null || job.matchScore < 80)) return false;
+      if (activeFilter === 'other' && job.matchScore !== null && job.matchScore >= 80) return false;
 
       // Filter by search query
       if (searchQuery.trim()) {
@@ -42,21 +44,29 @@ export default function Home() {
         return titleMatch || companyMatch || locationMatch;
       }
       return true;
+    }).sort((a, b) => {
+      // Sort Top Matches by score descending
+      if (activeFilter === 'top' && a.matchScore !== null && b.matchScore !== null) {
+        return b.matchScore - a.matchScore;
+      }
+      return 0;
     });
   }, [jobs, activeFilter, searchQuery]);
 
   const groups = useMemo(() => groupJobsByTime(filteredJobs), [filteredJobs]);
 
   const unseenCount = useMemo(() => jobs.filter((j) => !j.seen).length, [jobs]);
+  const topMatchCount = useMemo(() => jobs.filter((j) => j.matchScore !== null && j.matchScore >= 80).length, [jobs]);
+  const otherCount = useMemo(() => jobs.length - topMatchCount, [jobs, topMatchCount]);
 
   const handleClearAll = async () => {
     if (!currentUser) return;
     setClearing(true);
     try {
-      await hideAllJobs(currentUser.uid);
+      await deleteAllUserJobs(currentUser.uid);
       setClearModalOpen(false);
-    } catch {
-      // silent
+    } catch (err) {
+      console.error('Failed to delete jobs:', err);
     } finally {
       setClearing(false);
     }
@@ -124,6 +134,22 @@ export default function Home() {
               active={activeFilter === 'remoteok'}
               onClick={() => setActiveFilter('remoteok')}
             />
+            {topMatchCount > 0 && (
+              <>
+                <FilterChip
+                  label="Top Matches (80+)"
+                  count={topMatchCount}
+                  active={activeFilter === 'top'}
+                  onClick={() => setActiveFilter('top')}
+                />
+                <FilterChip
+                  label="Other Jobs"
+                  count={otherCount}
+                  active={activeFilter === 'other'}
+                  onClick={() => setActiveFilter('other')}
+                />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -193,7 +219,7 @@ export default function Home() {
       >
         <div className="flex flex-col gap-4">
           <p className="text-[14px] text-text-secondary leading-relaxed">
-            Are you sure you want to hide all <strong className="text-text-primary">{jobs.length} jobs</strong>? They won't appear again unless new postings match your search alerts.
+            Are you sure you want to permanently delete all <strong className="text-text-primary">{jobs.length} jobs</strong>? This action cannot be undone.
           </p>
           <div className="flex justify-end gap-2 pt-2 border-t border-border-default/60 mt-2">
             <Button

@@ -65,9 +65,9 @@ export default function JobDetailModal({ job, open, onClose, onApply }) {
 
         {/* CTA Action */}
         <div className="pt-3">
-          <Button fullWidth size="lg" variant="primary" onClick={handleApply}>
+          <Button fullWidth variant="primary" onClick={handleApply} className="h-14 text-[16px] gap-3">
             <span>Apply Now</span>
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-5 h-5" />
           </Button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import Toast from './components/shared/Toast';
 import ErrorToast from './components/shared/ErrorToast';
 import Home from './pages/Home';
 import Alerts from './pages/Alerts';
+import Resume from './pages/Resume';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -23,6 +24,7 @@ const App = () => {
             <Route element={<MainLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/alerts" element={<Alerts />} />
+              <Route path="/resume" element={<Resume />} />
             </Route>
           </Route>
         </Routes>

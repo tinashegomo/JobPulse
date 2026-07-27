@@ -123,20 +123,21 @@ export const deleteKeyword = async (keywordId) => {
 };
 
 // ---------------------------------------------------------------------------
-// Hide All Jobs
+// Delete All Jobs (permanent — clears both collections)
 // ---------------------------------------------------------------------------
 
-export const hideAllJobs = async (userId) => {
-  const q = query(
+export const deleteAllUserJobs = async (userId) => {
+  // 1. Delete all notified_jobs for this user
+  const notifiedQuery = query(
     collection(db, NOTIFIED_collection),
     where('userId', '==', userId)
   );
-  const snapshot = await getDocs(q);
-  const batch = snapshot.docs.map((d) =>
-    updateDoc(d.ref, {
-      hidden: true,
-      hiddenAt: serverTimestamp(),
-    })
-  );
-  await Promise.all(batch);
+  const notifiedSnap = await getDocs(notifiedQuery);
+  const notifiedDeletes = notifiedSnap.docs.map((d) => deleteDoc(d.ref));
+
+  // 2. Delete all jobs from the shared jobs collection
+  const jobsSnap = await getDocs(collection(db, 'jobs'));
+  const jobsDeletes = jobsSnap.docs.map((d) => deleteDoc(d.ref));
+
+  await Promise.all([...notifiedDeletes, ...jobsDeletes]);
 };

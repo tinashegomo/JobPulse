@@ -14,6 +14,7 @@ export const useJobs = () => {
 
     let jobsData = [];
     let userStates = {};
+    let matchScores = {};
 
     function merge() {
       const merged = jobsData
@@ -29,7 +30,13 @@ export const useJobs = () => {
         .map((job) => {
           const key = `${job.source}_${job.externalJobId}`;
           const state = userStates[key];
-          return { ...job, seen: state?.seen || false };
+          const score = matchScores[key];
+          return {
+            ...job,
+            seen: state?.seen || false,
+            matchScore: score?.score ?? null,
+            matchReason: score?.reason ?? null,
+          };
         });
       setJobs(merged);
       setLoading(false);
@@ -66,9 +73,28 @@ export const useJobs = () => {
       (err) => setError(err.message)
     );
 
+    const scoresQuery = query(
+      collection(db, 'job_match_scores'),
+      where('userId', '==', currentUser.uid)
+    );
+    const unsubScores = onSnapshot(
+      scoresQuery,
+      (snapshot) => {
+        matchScores = {};
+        for (const doc of snapshot.docs) {
+          const data = doc.data();
+          const key = `${data.source}_${data.externalJobId}`;
+          matchScores[key] = { score: data.score, reason: data.reason };
+        }
+        merge();
+      },
+      (err) => setError(err.message)
+    );
+
     return () => {
       unsubJobs();
       unsubStates();
+      unsubScores();
     };
   }, [currentUser]);
 
