@@ -45,10 +45,13 @@ export default function Home() {
       }
       return true;
     }).sort((a, b) => {
-      // Sort Top Matches by score descending
-      if (activeFilter === 'top' && a.matchScore !== null && b.matchScore !== null) {
+      // Always sort by match score descending (highest first)
+      // Jobs with scores come before jobs without scores
+      if (a.matchScore !== null && b.matchScore !== null) {
         return b.matchScore - a.matchScore;
       }
+      if (a.matchScore !== null) return -1;
+      if (b.matchScore !== null) return 1;
       return 0;
     });
   }, [jobs, activeFilter, searchQuery]);
