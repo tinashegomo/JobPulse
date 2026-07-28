@@ -7,7 +7,6 @@ import Button from '../components/shared/Button';
 import { Upload, FileText, Sparkles, User, Briefcase, Code, Wrench, FolderOpen, GraduationCap, MapPin, CheckCircle2, X, Loader2 } from 'lucide-react';
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
-import { generateJSON } from '../lib/gemini';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
@@ -69,11 +68,19 @@ Extract the following in ONLY raw JSON (no markdown, no code fences):
 }`;
 
   try {
-    const parsed = await generateJSON(prompt);
-    if (!parsed) {
-      console.error('[Resume AI] Gemini returned no parseable data');
+    const response = await fetch('/api/analyze-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('[Resume AI] API error:', response.status, error.error);
       return null;
     }
+
+    const parsed = await response.json();
     console.log('[Resume AI] Resume analyzed successfully:', Object.keys(parsed));
     return parsed;
   } catch (err) {
