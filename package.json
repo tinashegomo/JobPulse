@@ -10,13 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "^2.13.0",
     "@tanstack/react-query": "^5.101.2",
     "dompurify": "^3.4.12",
     "firebase": "^12.16.0",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.25.0",
     "mammoth": "^1.12.0",
+    "openai": "^7.0.0",
     "pdfjs-dist": "^6.1.200",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
