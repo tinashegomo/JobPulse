@@ -41,37 +41,41 @@ async function extractTextFromFile(file) {
   throw new Error('Unsupported file type');
 }
 
-async function analyzeResumeWithAI(resumeText) {
+async function analyzeResumeWithAI(resumeText, userId) {
   if (!resumeText) {
     console.warn('[Resume AI] resumeText missing — skipping analysis');
     return null;
   }
 
-  const prompt = `Analyze this resume/CV and extract structured information. Be thorough and specific.
+  const prompt = `Extract a structured candidate profile from this resume. Be precise and specific.
 
 Resume text:
 ${resumeText}
 
-Extract the following in ONLY raw JSON (no markdown, no code fences):
+Return ONLY raw JSON (no markdown, no code fences) in this exact shape:
 {
   "name": "full name or null",
   "title": "professional title (e.g. Full Stack Developer)",
-  "skills": ["list of key technical skills"],
-  "tools": ["list of tools and platforms used"],
-  "languages": ["programming languages"],
-  "frameworks": ["frameworks and libraries"],
-  "projects": ["notable projects with brief descriptions"],
-  "experience": "summary of work experience (2-3 sentences)",
-  "education": "education details",
-  "location": "location if mentioned",
-  "highlights": ["2-3 key career highlights or achievements"]
+  "yearsExperience": <number or null>,
+  "level": "entry|junior|mid|senior|lead|principal|manager",
+  "skills": ["Java", "Spring Boot", "React", "SQL"],
+  "tools": ["Docker", "Git", "AWS"],
+  "languages": ["JavaScript", "Python"],
+  "frameworks": ["React", "Express"],
+  "cloudSkills": ["Firebase", "AWS"],
+  "preferredRoles": ["Software Engineer", "Backend Developer"],
+  "avoidRoles": ["Senior", "Lead", "Manager"],
+  "education": "Computer Engineering",
+  "location": "Zimbabwe",
+  "workPreference": "remote|hybrid|onsite|any",
+  "highlights": ["2-3 key career highlights"]
 }`;
 
   try {
     const response = await fetch('/api/analyze-resume', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt, userId }),
     });
 
     if (!response.ok) {
@@ -175,17 +179,17 @@ export default function Resume() {
       setFileName(file.name);
       setAnalyzing(true);
 
-      const aiSummary = await analyzeResumeWithAI(text.trim());
+      const aiProfile = await analyzeResumeWithAI(text.trim(), currentUser?.uid);
       if (!currentUser) return;
 
       await setDoc(doc(db, 'resumes', currentUser.uid), {
         resumeText: text.trim(),
-        summary: aiSummary,
+        summary: aiProfile,
         originalFileName: file.name,
         updatedAt: new Date(),
       });
 
-      setSummary(aiSummary);
+      setSummary(aiProfile);
       setLastUpdated(new Date());
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -356,7 +360,7 @@ export default function Resume() {
         <div className="flex flex-col gap-4 mt-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-brand-primary" />
-            <h2 className="text-[16px] font-semibold text-text-primary">What the AI understood</h2>
+            <h2 className="text-[16px] font-semibold text-text-primary">Candidate Profile</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -378,6 +382,24 @@ export default function Resume() {
                 </div>
               </div>
             )}
+            {summary.level && (
+              <div className="flex items-center gap-3 p-3 rounded-[12px] bg-surface-elevated border border-border-default">
+                <Briefcase className="w-5 h-5 text-text-muted shrink-0" />
+                <div>
+                  <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Level</span>
+                  <p className="text-[14px] font-medium text-text-primary capitalize">{summary.level}</p>
+                </div>
+              </div>
+            )}
+            {summary.yearsExperience != null && (
+              <div className="flex items-center gap-3 p-3 rounded-[12px] bg-surface-elevated border border-border-default">
+                <Briefcase className="w-5 h-5 text-text-muted shrink-0" />
+                <div>
+                  <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Experience</span>
+                  <p className="text-[14px] font-medium text-text-primary">{summary.yearsExperience} years</p>
+                </div>
+              </div>
+            )}
             {summary.location && (
               <div className="flex items-center gap-3 p-3 rounded-[12px] bg-surface-elevated border border-border-default">
                 <MapPin className="w-5 h-5 text-text-muted shrink-0" />
@@ -387,16 +409,30 @@ export default function Resume() {
                 </div>
               </div>
             )}
+            {summary.workPreference && summary.workPreference !== 'any' && (
+              <div className="flex items-center gap-3 p-3 rounded-[12px] bg-surface-elevated border border-border-default">
+                <MapPin className="w-5 h-5 text-text-muted shrink-0" />
+                <div>
+                  <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Work Preference</span>
+                  <p className="text-[14px] font-medium text-text-primary capitalize">{summary.workPreference}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-4 p-4 rounded-[12px] bg-surface-elevated border border-border-default">
-            <SummarySection label="Skills" icon={Code} items={summary.skills} />
+            <SummarySection label="Core Skills" icon={Code} items={summary.skills} />
             <SummarySection label="Tools & Platforms" icon={Wrench} items={summary.tools} />
             <SummarySection label="Languages" icon={Code} items={summary.languages} />
             <SummarySection label="Frameworks" icon={FolderOpen} items={summary.frameworks} />
-            <SummarySection label="Projects" icon={FolderOpen} items={summary.projects} />
-            <SummarySection label="Experience" icon={Briefcase} text={summary.experience} />
+            <SummarySection label="Cloud Skills" icon={Wrench} items={summary.cloudSkills} />
             <SummarySection label="Education" icon={GraduationCap} text={summary.education} />
+            {summary.preferredRoles && summary.preferredRoles.length > 0 && (
+              <SummarySection label="Preferred Roles" icon={Briefcase} items={summary.preferredRoles} />
+            )}
+            {summary.avoidRoles && summary.avoidRoles.length > 0 && (
+              <SummarySection label="Avoid Roles" icon={Briefcase} items={summary.avoidRoles} />
+            )}
             {summary.highlights && summary.highlights.length > 0 && (
               <SummarySection label="Key Highlights" icon={Sparkles} items={summary.highlights} />
             )}

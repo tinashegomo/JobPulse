@@ -36,6 +36,8 @@ export const useJobs = () => {
             seen: state?.seen || false,
             matchScore: score?.score ?? null,
             matchReason: score?.reason ?? null,
+            matchedSkills: score?.matchedSkills ?? [],
+            missingSkills: score?.missingSkills ?? [],
           };
         });
       setJobs(merged);
@@ -84,7 +86,7 @@ export const useJobs = () => {
         for (const doc of snapshot.docs) {
           const data = doc.data();
           const key = `${data.source}_${data.externalJobId}`;
-          matchScores[key] = { score: data.score, reason: data.reason };
+          matchScores[key] = { score: data.score, reason: data.reason, matchedSkills: data.matchedSkills, missingSkills: data.missingSkills };
         }
         merge();
       },

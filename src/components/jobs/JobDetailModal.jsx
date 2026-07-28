@@ -46,6 +46,37 @@ export default function JobDetailModal({ job, open, onClose, onApply }) {
 
         <div className="border-t border-border-default/60 my-1" />
 
+        {/* Skills Match Section */}
+        {((job.matchedSkills && job.matchedSkills.length > 0) || (job.missingSkills && job.missingSkills.length > 0)) && (
+          <div className="flex flex-col gap-2">
+            <h3 className="text-[12px] font-semibold text-text-muted uppercase tracking-wider">
+              Skills Match
+            </h3>
+            <div className="flex flex-col gap-2">
+              {job.matchedSkills && job.matchedSkills.length > 0 && (
+                <div>
+                  <span className="text-[12px] font-medium text-success-main">Matched</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {job.matchedSkills.map((skill, i) => (
+                      <Badge key={i} variant="success">{skill}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {job.missingSkills && job.missingSkills.length > 0 && (
+                <div>
+                  <span className="text-[12px] font-medium text-warning-main">Missing</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {job.missingSkills.map((skill, i) => (
+                      <Badge key={i} variant="warning">{skill}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Description Section */}
         {formattedDescription ? (
           <div className="flex flex-col gap-2">

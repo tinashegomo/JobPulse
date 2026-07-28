@@ -1,4 +1,16 @@
 import { analyzeResume } from './lib/ai/resumeAnalyzer.js';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+// Initialize Firebase Admin once
+let db;
+if (!getApps().length) {
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+  if (serviceAccount.project_id) {
+    initializeApp({ credential: cert(serviceAccount) });
+    db = getFirestore();
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,20 +26,28 @@ export default async function handler(req, res) {
     });
   }
 
-  const { prompt } = req.body;
+  const { prompt, userId } = req.body;
   if (!prompt) {
     return res.status(400).json({ success: false, message: 'Missing prompt in request body' });
   }
 
   try {
-    // prompt contains the full resume text wrapped in the analysis prompt
-    // We extract just the resume text from the prompt for the analyzer
-    const resumeTextMatch = prompt.match(/Resume text:\n([\s\S]*?)\n\nExtract/);
+    // Extract just the resume text from the prompt
+    const resumeTextMatch = prompt.match(/Resume text:\n([\s\S]*?)\n\n/);
     const resumeText = resumeTextMatch ? resumeTextMatch[1].trim() : prompt;
 
-    const result = await analyzeResume(apiKey, resumeText);
+    const profile = await analyzeResume(apiKey, resumeText);
 
-    return res.status(200).json(result);
+    // Save structured profile to Firestore if userId provided
+    if (userId && db) {
+      await db.collection('resume_profiles').doc(userId).set({
+        profile,
+        updatedAt: new Date(),
+      });
+      console.log(`[API] Saved resume profile for user ${userId}`);
+    }
+
+    return res.status(200).json(profile);
   } catch (err) {
     console.error('[API] AI analysis failed:', err.message);
     return res.status(500).json({
