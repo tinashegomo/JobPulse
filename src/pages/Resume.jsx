@@ -182,12 +182,21 @@ export default function Resume() {
       const aiProfile = await analyzeResumeWithAI(text.trim(), currentUser?.uid);
       if (!currentUser) return;
 
+      // Save raw resume text + old summary format
       await setDoc(doc(db, 'resumes', currentUser.uid), {
         resumeText: text.trim(),
         summary: aiProfile,
         originalFileName: file.name,
         updatedAt: new Date(),
       });
+
+      // Save structured profile for the scraper's rule engine
+      if (aiProfile) {
+        await setDoc(doc(db, 'resume_profiles', currentUser.uid), {
+          profile: aiProfile,
+          updatedAt: new Date(),
+        });
+      }
 
       setSummary(aiProfile);
       setLastUpdated(new Date());
