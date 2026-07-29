@@ -135,11 +135,11 @@ export default function Resume() {
     if (!currentUser) return;
     const fetchResume = async () => {
       try {
-        const snap = await getDoc(doc(db, 'resumes', currentUser.uid));
+        const snap = await getDoc(doc(db, 'resume_profiles', currentUser.uid));
         if (snap.exists()) {
           const data = snap.data();
           setResumeText(data.resumeText || '');
-          setSummary(data.summary || null);
+          setSummary(data.profile || null);
           setFileName(data.originalFileName || '');
           if (data.updatedAt?.toDate) {
             setLastUpdated(data.updatedAt.toDate());
@@ -182,21 +182,13 @@ export default function Resume() {
       const aiProfile = await analyzeResumeWithAI(text.trim(), currentUser?.uid);
       if (!currentUser) return;
 
-      // Save raw resume text + old summary format
-      await setDoc(doc(db, 'resumes', currentUser.uid), {
+      // Save everything to resume_profiles — single source of truth
+      await setDoc(doc(db, 'resume_profiles', currentUser.uid), {
+        profile: aiProfile,
         resumeText: text.trim(),
-        summary: aiProfile,
         originalFileName: file.name,
         updatedAt: new Date(),
       });
-
-      // Save structured profile for the scraper's rule engine
-      if (aiProfile) {
-        await setDoc(doc(db, 'resume_profiles', currentUser.uid), {
-          profile: aiProfile,
-          updatedAt: new Date(),
-        });
-      }
 
       setSummary(aiProfile);
       setLastUpdated(new Date());
@@ -240,9 +232,9 @@ export default function Resume() {
     setFileName('');
     setLastUpdated(null);
     try {
-      await setDoc(doc(db, 'resumes', currentUser.uid), {
+      await setDoc(doc(db, 'resume_profiles', currentUser.uid), {
+        profile: null,
         resumeText: '',
-        summary: null,
         originalFileName: '',
         updatedAt: new Date(),
       });
