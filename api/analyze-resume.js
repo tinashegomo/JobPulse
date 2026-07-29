@@ -45,6 +45,8 @@ export default async function handler(req, res) {
         updatedAt: new Date(),
       });
       console.log(`[API] Saved resume profile for user ${userId}`);
+    } else if (userId && !db) {
+      console.warn('[API] FIREBASE_SERVICE_ACCOUNT not set — resume_profiles NOT saved. Profile only returned to frontend.');
     }
 
     return res.status(200).json(profile);
